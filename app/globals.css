@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color: #161616; background: #f4f2ed; }
+* { box-sizing: border-box; }
+body { min-height: 100vh; background-image: radial-gradient(circle at 85% 10%, rgba(217,255,67,.55), transparent 22rem); }
+::selection { background: #d9ff43; color: #161616; }
+.print-only { display: none; }
+
+@media print {
+  @page { size: A4; margin: 8mm; }
+  header, .no-print { display: none !important; }
+  body { background: white; }
+  .screen-report { display: none !important; }
+  .print-only { display: block !important; }
+  .print-page { width: 100%; max-width: none !important; margin: 0 !important; padding: 0 !important; font-size: 9pt; }
+  .print-avoid { break-inside: avoid; }
+}

@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id         String      @id
+  name       String
+  order      Int
+  indicators Indicator[]
+}
+
+model Indicator {
+  id                 String                @id
+  categoryId         String
+  category           Category              @relation(fields: [categoryId], references: [id])
+  name               String
+  order              Int
+  consultingPriority String
+  selfQuestions      SelfQuestion[]
+  situationalQuestion SituationalQuestion?
+  evidenceItems      EvidenceItem[]
+  scores             IndicatorScore[]
+}
+
+model SelfQuestion {
+  id          String    @id
+  indicatorId String
+  indicator   Indicator @relation(fields: [indicatorId], references: [id])
+  order       Int
+  text        String
+}
+
+model SituationalQuestion {
+  id          String              @id
+  indicatorId String              @unique
+  indicator   Indicator           @relation(fields: [indicatorId], references: [id])
+  order       Int
+  prompt      String
+  options     SituationalOption[]
+}
+
+model SituationalOption {
+  id         String                @id
+  questionId String
+  question   SituationalQuestion   @relation(fields: [questionId], references: [id])
+  order      Int
+  text       String
+  score      Int
+  tags       String?
+}
+
+model EvidenceItem {
+  id          String    @id
+  indicatorId String
+  indicator   Indicator @relation(fields: [indicatorId], references: [id])
+  order       Int
+  text        String
+  weight      Int       @default(1)
+}
+
+model Scan {
+  id                   String           @id @default(cuid())
+  studentName          String
+  grade                String
+  major                String
+  careerPath           String
+  email                String?
+  projectTitle         String
+  projectSummary       String
+  projectRole          String
+  projectChallenge     String
+  projectOutcome       String
+  selfAnswersJson      String
+  situationalAnswersJson String
+  evidenceAnswersJson String
+  overallScore         Float
+  categoryScoresJson   String
+  typeTagsJson         String
+  createdAt            DateTime         @default(now())
+  indicatorScores      IndicatorScore[]
+}
+
+model IndicatorScore {
+  id               Int       @id @default(autoincrement())
+  scanId           String
+  scan             Scan      @relation(fields: [scanId], references: [id], onDelete: Cascade)
+  indicatorId      String
+  indicator        Indicator @relation(fields: [indicatorId], references: [id])
+  selfScore        Float
+  situationalScore Float
+  evidenceScore    Float
+  finalScore       Float
+
+  @@unique([scanId, indicatorId])
+}
