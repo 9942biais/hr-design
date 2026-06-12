@@ -17,22 +17,37 @@ export const projectSchema = z.object({
   projectOutcome: z.string().min(10, "결과를 설명해 주세요."),
 });
 
-const completeRecord = <T extends z.ZodTypeAny>(keys: readonly string[], valueSchema: T) =>
-  z.record(valueSchema).superRefine((value, context) => {
-    keys.forEach((key) => {
-      if (value[key] === undefined) {
-        context.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: "응답이 필요합니다." });
-      }
-    });
-  });
+const selfAnswerShape = Object.fromEntries(
+  selfQuestions.map((question) => [question.id, z.coerce.number().min(1).max(5)]),
+) as Record<string, z.ZodNumber>;
+
+const situationalAnswerShape = Object.fromEntries(
+  situationalQuestions.map((question) => [
+    question.id,
+    z.string().refine(
+      (answer) => question.options.some((option) => option.id === answer),
+      "선택 가능한 답변이 아닙니다.",
+    ),
+  ]),
+) as Record<string, z.ZodType<string>>;
+
+const evidenceAnswerSchema = z.object({
+  checked: z.boolean(),
+  note: z.string().optional(),
+  source: z.string().optional(),
+}).strict("허용되지 않은 증거자료 값입니다.");
+
+const evidenceAnswerShape = Object.fromEntries(
+  evidenceItems.map((item) => [item.id, evidenceAnswerSchema]),
+) as Record<string, typeof evidenceAnswerSchema>;
 
 export const submissionSchema = z.object({
   profile: profileSchema,
   project: projectSchema,
-  self: completeRecord(selfQuestions.map((question) => question.id), z.coerce.number().min(1).max(5)),
-  situational: completeRecord(situationalQuestions.map((question) => question.id), z.string().min(1)),
-  evidence: completeRecord(evidenceItems.map((item) => item.id), z.object({ checked: z.boolean(), note: z.string().optional(), source: z.string().optional() })),
-});
+  self: z.object(selfAnswerShape).strict("허용되지 않은 자기평가 항목입니다."),
+  situational: z.object(situationalAnswerShape).strict("허용되지 않은 상황판단 항목입니다."),
+  evidence: z.object(evidenceAnswerShape).strict("허용되지 않은 증거자료 항목입니다."),
+}).strict("허용되지 않은 제출 데이터입니다.");
 
 export type SubmissionSection = "profile" | "self" | "situational" | "project" | "evidence";
 

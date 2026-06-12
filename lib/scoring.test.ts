@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { categories, evidenceItems, indicators, selfQuestions, situationalQuestions } from "@/lib/scan-data";
-import { calculateScores, getTypeTags, type CalculatedIndicatorScore } from "@/lib/scoring";
+import {
+  calculateScores,
+  getEvidenceStatus,
+  getTypeTags,
+  type CalculatedIndicatorScore,
+} from "@/lib/scoring";
 
 function answers(likert: number, situationalScore: number, checked: boolean) {
   return {
@@ -44,6 +49,33 @@ describe("calculateScores", () => {
     const result = calculateScores(answers(3, 100, true));
     expect(Object.keys(result.categoryScores)).toEqual(categories.map((category) => category.id));
     expect(Object.values(result.categoryScores)).toEqual([87.5, 87.5, 87.5, 87.5]);
+  });
+
+  it("ignores injected keys and calculates only canonical questions", () => {
+    const baseline = answers(3, 100, false);
+    const injected = {
+      ...baseline,
+      self: { ...baseline.self, "self-problem-discovery-injected": 5 },
+      evidence: {
+        ...baseline.evidence,
+        "evidence-problem-discovery-injected": { checked: true },
+      },
+    };
+
+    expect(calculateScores(injected)).toEqual(calculateScores(baseline));
+  });
+
+  it("fails when a situational answer is not a real option", () => {
+    const invalid = answers(3, 100, false);
+    invalid.situational[situationalQuestions[0].id] = "not-a-real-option";
+    expect(() => calculateScores(invalid)).toThrow("Invalid situational answer");
+  });
+});
+
+describe("getEvidenceStatus", () => {
+  it("distinguishes missing evidence from self-reported evidence", () => {
+    expect(getEvidenceStatus(answers(3, 100, false).evidence)).toBe("missing");
+    expect(getEvidenceStatus(answers(3, 100, true).evidence)).toBe("self-reported");
   });
 });
 

@@ -23,7 +23,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Submitted scans are listed at `/admin/scans`.
 
-The admin page uses HTTP Basic authentication. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env`; the route remains unavailable when either value is missing.
+The admin page uses HTTP Basic authentication. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env`; the route remains unavailable when either value is missing. Set `RESULT_ACCESS_SECRET` to a random string of at least 32 characters. Result pages require an HMAC access token, including links opened from the admin list.
 
 On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp` when needed. A local `.env` is already included for immediate development.
 
@@ -40,8 +40,11 @@ indicator = self-assessment × 0.25
 - Likert averages are linearly converted from 1–5 to 0–100.
 - Situational options contain explicit 0–100 scores and optional tags in seed data.
 - Evidence score is the percentage of checked items for that indicator.
+- A report with no checked evidence is stored and displayed as a provisional result rather than a verified standard report.
 - Category scores average their three indicators.
 - Overall score averages all 12 indicators.
+
+Every scan stores its scoring method, scoring version, and evidence status so future scoring methods can coexist without making historical reports ambiguous.
 
 All score, type-tag, and consulting-priority logic lives in `lib/scoring.ts`. No AI-generated scoring is used.
 

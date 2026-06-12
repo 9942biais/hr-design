@@ -15,16 +15,16 @@ model Category {
 }
 
 model Indicator {
-  id                 String                @id
-  categoryId         String
-  category           Category              @relation(fields: [categoryId], references: [id])
-  name               String
-  order              Int
-  consultingPriority String
-  selfQuestions      SelfQuestion[]
+  id                  String               @id
+  categoryId          String
+  category            Category             @relation(fields: [categoryId], references: [id])
+  name                String
+  order               Int
+  consultingPriority  String
+  selfQuestions       SelfQuestion[]
   situationalQuestion SituationalQuestion?
-  evidenceItems      EvidenceItem[]
-  scores             IndicatorScore[]
+  evidenceItems       EvidenceItem[]
+  scores              IndicatorScore[]
 }
 
 model SelfQuestion {
@@ -45,9 +45,9 @@ model SituationalQuestion {
 }
 
 model SituationalOption {
-  id         String                @id
+  id         String              @id
   questionId String
-  question   SituationalQuestion   @relation(fields: [questionId], references: [id])
+  question   SituationalQuestion @relation(fields: [questionId], references: [id])
   order      Int
   text       String
   score      Int
@@ -64,25 +64,28 @@ model EvidenceItem {
 }
 
 model Scan {
-  id                   String           @id @default(cuid())
-  studentName          String
-  grade                String
-  major                String
-  careerPath           String
-  email                String?
-  projectTitle         String
-  projectSummary       String
-  projectRole          String
-  projectChallenge     String
-  projectOutcome       String
-  selfAnswersJson      String
+  id                     String           @id @default(cuid())
+  studentName            String
+  grade                  String
+  major                  String
+  careerPath             String
+  email                  String?
+  projectTitle           String
+  projectSummary         String
+  projectRole            String
+  projectChallenge       String
+  projectOutcome         String
+  selfAnswersJson        String
   situationalAnswersJson String
-  evidenceAnswersJson String
-  overallScore         Float
-  categoryScoresJson   String
-  typeTagsJson         String
-  createdAt            DateTime         @default(now())
-  indicatorScores      IndicatorScore[]
+  evidenceAnswersJson    String
+  scoringMethod          String           @default("deterministic-v1")
+  scoringVersion         String           @default("1.0.0")
+  evidenceStatus         String           @default("missing")
+  overallScore           Float
+  categoryScoresJson     String
+  typeTagsJson           String
+  createdAt              DateTime         @default(now())
+  indicatorScores        IndicatorScore[]
 }
 
 model IndicatorScore {

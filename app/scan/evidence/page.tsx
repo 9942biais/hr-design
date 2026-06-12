@@ -40,7 +40,11 @@ export default function EvidencePage() {
   async function submit() {
     setError("");
     setIssues([]);
-    const normalized = Object.fromEntries(evidenceItems.map((item) => [item.id, { ...(evidence[item.id] ?? { checked: false, note: "" }), source }]));
+    const normalized = Object.fromEntries(evidenceItems.map((item) => [item.id, {
+      ...(evidence[item.id] ?? { checked: false, note: "" }),
+      note: evidence[item.id]?.note?.trim() ?? "",
+      source: source.trim(),
+    }]));
     const payload = { ...state, evidence: normalized };
     const parsed = submissionSchema.safeParse(payload);
     if (!parsed.success) { setIssues(getSubmissionIssues(payload)); return; }
@@ -49,20 +53,24 @@ export default function EvidencePage() {
     const response = await fetch("/api/scans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
     const data = await response.json();
     if (!response.ok) { setError(data.error ?? "진단을 제출하지 못했습니다."); setSubmitting(false); return; }
-    router.push(`/scan/result/${data.id}`);
+    router.push(`/scan/result/${data.id}?access=${encodeURIComponent(data.accessToken)}`);
   }
 
   return <ScanShell step={5} eyebrow="포트폴리오 증거자료" title="검토자가 실제로 확인할 수 있는 것은 무엇인가요?">
     <div className="space-y-8">
       <section className="rounded-3xl bg-ink p-6 text-white shadow-card md:p-9">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-lime">자료는 한 번만 등록하세요</p>
-        <h2 className="mt-2 text-2xl font-black">포트폴리오 PDF, 웹 링크 또는 파일명</h2>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">같은 자료를 각 항목마다 다시 입력할 필요가 없습니다. 아래에서 확인 가능한 항목을 선택하고, 필요한 경우 페이지만 연결하세요.</p>
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-lime">v1 · 수동 증거 체크</p>
+        <h2 className="mt-2 text-2xl font-black">포트폴리오 자료 링크 또는 파일명</h2>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">현재 버전은 PDF 파일을 업로드하거나 자동 분석하지 않습니다. 검토할 자료의 링크 또는 파일명을 적고, 실제로 확인 가능한 항목만 선택하세요.</p>
         <input className={`${inputClass} mt-5 border-white/20 bg-white text-ink`} placeholder="예: https://portfolio.example.com 또는 portfolio.pdf" value={source} onChange={(event) => {
           const nextSource = event.target.value;
           setSource(nextSource);
-          setEvidence((current) => ({ ...current, "__source": { checked: false, source: nextSource } }));
+          setEvidence((current) => Object.fromEntries(evidenceItems.map((item) => [
+            item.id,
+            { ...(current[item.id] ?? { checked: false, note: "" }), source: nextSource },
+          ])));
         }} />
+        <p className="mt-3 text-xs font-bold text-white/55">아무 항목도 선택하지 않으면 리포트는 증거자료가 없는 임시 결과로 표시됩니다.</p>
       </section>
       {categories.map((category) => <section key={category.id} className="rounded-3xl bg-white p-6 shadow-card md:p-9"><h2 className="mb-6 text-2xl font-black">{category.name}</h2><div className="grid gap-6 md:grid-cols-3">
         {indicators.filter((indicator) => indicator.categoryId === category.id).map((indicator) => <div key={indicator.id}><h3 className="mb-3 text-sm font-black text-violet">{indicator.name}</h3><div className="space-y-3">

@@ -1,4 +1,15 @@
-import { categories, indicators, situationalQuestions, type IndicatorId } from "@/lib/scan-data";
+import {
+  categories,
+  evidenceItems,
+  indicators,
+  selfQuestions,
+  situationalQuestions,
+  type IndicatorId,
+} from "@/lib/scan-data";
+
+export const SCORING_METHOD = "deterministic-v1";
+export const SCORING_VERSION = "1.0.0";
+export type EvidenceStatus = "missing" | "self-reported";
 
 export type EvidenceAnswer = { checked: boolean; note?: string; source?: string };
 export type ScanAnswers = {
@@ -21,22 +32,27 @@ export type CalculatedIndicatorScore = {
 const round = (value: number) => Math.round(value * 10) / 10;
 const likertToPercent = (average: number) => ((average - 1) / 4) * 100;
 
+export function getEvidenceStatus(evidence: ScanAnswers["evidence"]): EvidenceStatus {
+  return evidenceItems.some((item) => evidence[item.id]?.checked) ? "self-reported" : "missing";
+}
+
 export function calculateScores(answers: ScanAnswers) {
   const indicatorScores: CalculatedIndicatorScore[] = indicators.map((indicator) => {
-    const selfValues = Object.entries(answers.self)
-      .filter(([id]) => id.startsWith(`self-${indicator.id}-`))
-      .map(([, value]) => value);
+    const selfValues = selfQuestions
+      .filter((question) => question.indicatorId === indicator.id)
+      .map((question) => answers.self[question.id]);
     const selfAverage = selfValues.reduce((sum, value) => sum + value, 0) / selfValues.length;
     const selfScore = likertToPercent(selfAverage);
 
     const question = situationalQuestions.find((item) => item.indicatorId === indicator.id)!;
     const selectedOption = question.options.find((option) => option.id === answers.situational[question.id]);
-    const situationalScore = selectedOption?.score ?? 0;
+    if (!selectedOption) throw new Error(`Invalid situational answer for ${question.id}`);
+    const situationalScore = selectedOption.score;
 
-    const evidenceEntries = Object.entries(answers.evidence).filter(([id]) =>
-      id.startsWith(`evidence-${indicator.id}-`),
-    );
-    const checkedCount = evidenceEntries.filter(([, value]) => value.checked).length;
+    const evidenceEntries = evidenceItems
+      .filter((item) => item.indicatorId === indicator.id)
+      .map((item) => answers.evidence[item.id]);
+    const checkedCount = evidenceEntries.filter((value) => value.checked).length;
     const evidenceScore = (checkedCount / evidenceEntries.length) * 100;
     const finalScore = selfScore * 0.25 + situationalScore * 0.35 + evidenceScore * 0.4;
 
