@@ -12,8 +12,13 @@ import { profileSchema, type ProfileData } from "@/lib/schemas";
 export default function ProfilePage() {
   const router = useRouter();
   const { state, update, ready } = useScan();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ProfileData>({ resolver: zodResolver(profileSchema), defaultValues: state.profile });
-  useEffect(() => { if (ready) reset(state.profile); }, [ready, reset, state.profile]);
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ProfileData>({ resolver: zodResolver(profileSchema), defaultValues: state.profile });
+  useEffect(() => { if (ready) reset(state.profile); }, [ready, reset]);
+  useEffect(() => {
+    if (!ready) return;
+    const subscription = watch((profile) => update({ profile: profile as ProfileData }));
+    return () => subscription.unsubscribe();
+  }, [ready, update, watch]);
 
   return <ScanShell step={1} eyebrow="학생 프로필" title="먼저, 현재의 나를 알려주세요.">
     <form onSubmit={handleSubmit((profile) => { update({ profile }); router.push("/scan/self-assessment"); })} className="rounded-3xl bg-white p-6 shadow-card md:p-10">

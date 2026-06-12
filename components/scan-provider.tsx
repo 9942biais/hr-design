@@ -1,10 +1,10 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type { EvidenceAnswer } from "@/lib/scoring";
 import type { ProfileData, ProjectData } from "@/lib/schemas";
 
-type ScanState = {
+export type ScanState = {
   profile: ProfileData;
   project: ProjectData;
   self: Record<string, number>;
@@ -12,7 +12,7 @@ type ScanState = {
   evidence: Record<string, EvidenceAnswer>;
 };
 
-const initialState: ScanState = {
+export const initialState: ScanState = {
   profile: { studentName: "", grade: "3학년", major: "", careerPath: "", email: "" },
   project: { projectTitle: "", projectSummary: "", projectRole: "", projectChallenge: "", projectOutcome: "" },
   self: {},
@@ -33,19 +33,36 @@ export function ScanProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = window.localStorage.getItem("designer-inbody-scan");
-    if (stored) setState(JSON.parse(stored));
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as Partial<ScanState>;
+        setState({
+          ...initialState,
+          ...parsed,
+          profile: { ...initialState.profile, ...parsed.profile },
+          project: { ...initialState.project, ...parsed.project },
+          self: parsed.self ?? {},
+          situational: parsed.situational ?? {},
+          evidence: parsed.evidence ?? {},
+        });
+      } catch {
+        window.localStorage.removeItem("designer-inbody-scan");
+      }
+    }
     setReady(true);
   }, []);
 
-  useEffect(() => {
-    if (ready) window.localStorage.setItem("designer-inbody-scan", JSON.stringify(state));
-  }, [state, ready]);
-
-  const update = (patch: Partial<ScanState>) => setState((current) => ({ ...current, ...patch }));
-  const reset = () => {
+  const update = useCallback((patch: Partial<ScanState>) => {
+    setState((current) => {
+      const next = { ...current, ...patch };
+      if (ready) window.localStorage.setItem("designer-inbody-scan", JSON.stringify(next));
+      return next;
+    });
+  }, [ready]);
+  const reset = useCallback(() => {
     setState(initialState);
     window.localStorage.removeItem("designer-inbody-scan");
-  };
+  }, []);
 
   return <ScanContext.Provider value={{ state, update, reset, ready }}>{children}</ScanContext.Provider>;
 }

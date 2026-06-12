@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { evidenceItems, selfQuestions, situationalQuestions } from "@/lib/scan-data";
 
 export const profileSchema = z.object({
   studentName: z.string().min(2, "이름을 입력해 주세요."),
@@ -16,13 +17,34 @@ export const projectSchema = z.object({
   projectOutcome: z.string().min(10, "결과를 설명해 주세요."),
 });
 
+const completeRecord = <T extends z.ZodTypeAny>(keys: readonly string[], valueSchema: T) =>
+  z.record(valueSchema).superRefine((value, context) => {
+    keys.forEach((key) => {
+      if (value[key] === undefined) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: "응답이 필요합니다." });
+      }
+    });
+  });
+
 export const submissionSchema = z.object({
   profile: profileSchema,
   project: projectSchema,
-  self: z.record(z.number().min(1).max(5)),
-  situational: z.record(z.string()),
-  evidence: z.record(z.object({ checked: z.boolean(), note: z.string().optional() })),
+  self: completeRecord(selfQuestions.map((question) => question.id), z.coerce.number().min(1).max(5)),
+  situational: completeRecord(situationalQuestions.map((question) => question.id), z.string().min(1)),
+  evidence: completeRecord(evidenceItems.map((item) => item.id), z.object({ checked: z.boolean(), note: z.string().optional(), source: z.string().optional() })),
 });
+
+export type SubmissionSection = "profile" | "self" | "situational" | "project" | "evidence";
+
+export function getSubmissionIssues(input: unknown) {
+  const result = submissionSchema.safeParse(input);
+  if (result.success) return [];
+  return result.error.issues.map((issue) => ({
+    section: issue.path[0] as SubmissionSection,
+    field: String(issue.path[1] ?? ""),
+    message: issue.message,
+  }));
+}
 
 export type ProfileData = z.infer<typeof profileSchema>;
 export type ProjectData = z.infer<typeof projectSchema>;

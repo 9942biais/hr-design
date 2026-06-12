@@ -1,6 +1,6 @@
 import { categories, indicators, situationalQuestions, type IndicatorId } from "@/lib/scan-data";
 
-export type EvidenceAnswer = { checked: boolean; note?: string };
+export type EvidenceAnswer = { checked: boolean; note?: string; source?: string };
 export type ScanAnswers = {
   self: Record<string, number>;
   situational: Record<string, string>;
@@ -63,7 +63,7 @@ export function calculateScores(answers: ScanAnswers) {
   return { indicatorScores, categoryScores, overallScore, typeTags: getTypeTags(indicatorScores, categoryScores) };
 }
 
-function getTypeTags(scores: CalculatedIndicatorScore[], categoryScores: Record<string, number>) {
+export function getTypeTags(scores: CalculatedIndicatorScore[], categoryScores: Record<string, number>) {
   const value = (id: IndicatorId) => scores.find((score) => score.indicatorId === id)!.finalScore;
   const highestCategory = Object.entries(categoryScores).sort((a, b) => b[1] - a[1])[0][0];
   const tags: string[] = [];

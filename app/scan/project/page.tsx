@@ -12,8 +12,13 @@ import { projectSchema, type ProjectData } from "@/lib/schemas";
 export default function ProjectPage() {
   const router = useRouter();
   const { state, update, ready } = useScan();
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ProjectData>({ resolver: zodResolver(projectSchema), defaultValues: state.project });
-  useEffect(() => { if (ready) reset(state.project); }, [ready, reset, state.project]);
+  const { register, handleSubmit, reset, watch, formState: { errors } } = useForm<ProjectData>({ resolver: zodResolver(projectSchema), defaultValues: state.project });
+  useEffect(() => { if (ready) reset(state.project); }, [ready, reset]);
+  useEffect(() => {
+    if (!ready) return;
+    const subscription = watch((project) => update({ project: project as ProjectData }));
+    return () => subscription.unsubscribe();
+  }, [ready, update, watch]);
   const area = `${inputClass} min-h-28 resize-y`;
 
   return <ScanShell step={4} eyebrow="대표 프로젝트" title="나를 가장 잘 보여주는 프로젝트를 선택하세요.">

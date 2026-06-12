@@ -23,6 +23,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Submitted scans are listed at `/admin/scans`.
 
+The admin page uses HTTP Basic authentication. Set `ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env`; the route remains unavailable when either value is missing.
+
 On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp` when needed. A local `.env` is already included for immediate development.
 
 ## Scoring
@@ -54,6 +56,7 @@ npm run db:push
 npm run db:seed
 npm run db:studio
 npm run build
+npm test
 ```
 
 ## PDF export

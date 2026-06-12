@@ -43,9 +43,9 @@ export default async function ResultPage({ params }: { params: Promise<{ id: str
       <div className="grid md:grid-cols-[.8fr_1.2fr]">
         <div className="border-b border-black/10 p-6 md:border-b-0 md:border-r md:p-8">
           <h2 className="text-lg font-black">4대 역량 분포</h2><CategoryRadar data={radarData} />
-          <div className="mt-4 grid gap-6 sm:grid-cols-2">
-            <div><h3 className="mb-3 text-xs font-black uppercase tracking-wider text-violet">가장 강한 역량</h3>{strengths.map((item, index) => <p key={item.id} className="border-t border-black/10 py-2 text-sm font-bold">{index+1}. {item.name} <span className="float-right">{item.score}</span></p>)}</div>
-            <div><h3 className="mb-3 text-xs font-black uppercase tracking-wider text-coral">우선 개선 영역</h3>{improvements.map((item, index) => <p key={item.id} className="border-t border-black/10 py-2 text-sm font-bold">{index+1}. {item.name} <span className="float-right">{item.score}</span></p>)}</div>
+          <div className="mt-4 grid gap-6 xl:grid-cols-2">
+            <div><h3 className="mb-3 text-xs font-black uppercase tracking-wider text-violet">가장 강한 역량</h3>{strengths.map((item, index) => <p key={item.id} className="flex items-start justify-between gap-3 border-t border-black/10 py-2 text-sm font-bold"><span className="min-w-0">{index+1}. {item.name}</span><span className="shrink-0">{item.score}</span></p>)}</div>
+            <div><h3 className="mb-3 text-xs font-black uppercase tracking-wider text-coral">우선 개선 영역</h3>{improvements.map((item, index) => <p key={item.id} className="flex items-start justify-between gap-3 border-t border-black/10 py-2 text-sm font-bold"><span className="min-w-0">{index+1}. {item.name}</span><span className="shrink-0">{item.score}</span></p>)}</div>
           </div>
         </div>
         <div className="p-6 md:p-8"><h2 className="text-lg font-black">12개 세부 지표 점수</h2><IndicatorBars data={barData} /></div>
